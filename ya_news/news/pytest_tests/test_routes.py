@@ -1,59 +1,48 @@
-import pytest
-
 from http import HTTPStatus
 
-from django.urls import reverse
-
+import pytest
 from pytest_django.asserts import assertRedirects
 
 
 @pytest.mark.parametrize(
-    'name',
-    ('news:home', 'users:login', 'users:logout', 'users:signup')
+    'reverse_url',
+    (pytest.lazy_fixture('home_url_reverse'),
+     pytest.lazy_fixture('login_url_reverse'),
+     pytest.lazy_fixture('logout_url_reverse'),
+     pytest.lazy_fixture('signup_url_reverse'),)
 )
-def test_pages_availability(client, name):
-    url = reverse(name)
+def test_pages_availability(client, reverse_url):
+    url = reverse_url
     response = client.get(url)
     assert response.status_code == HTTPStatus.OK
 
 
-def test_news_detail_page(client, news, id_for_args_news):
-    name = 'news:detail'
-    url = reverse(name, args=id_for_args_news)
-    response = client.get(url)
+def test_news_detail_page(client, detail_url_reverse):
+    response = client.get(detail_url_reverse)
     assert response.status_code == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(
-    'parametrized_client, expected_status',
-    (
-        (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
-        (pytest.lazy_fixture('author_client'), HTTPStatus.OK)
-    ),
-)
-@pytest.mark.parametrize(
-    'name',
-    ('news:edit', 'news:delete'),
+    'reverse_url, parametrized_client, expected_status',
+    ((pytest.lazy_fixture('edit_url_reverse'),
+      pytest.lazy_fixture('not_author_client'),
+      HTTPStatus.NOT_FOUND),
+     (pytest.lazy_fixture('delete_url_reverse'),
+      pytest.lazy_fixture('author_client'), HTTPStatus.OK))
 )
 def test_pages_availability_for_different_users(
-        parametrized_client, name, comment,
-        expected_status, id_for_args_comment
-):
-    url = reverse(name, args=id_for_args_comment)
-    response = parametrized_client.get(url)
+        parametrized_client, reverse_url,
+        expected_status):
+    response = parametrized_client.get(reverse_url)
     assert response.status_code == expected_status
 
 
 @pytest.mark.parametrize(
-    'name, args',
-    (
-        ('news:edit', pytest.lazy_fixture('id_for_args_comment')),
-        ('news:delete', pytest.lazy_fixture('id_for_args_comment')),
-    ),
+    'reverse_url',
+    (pytest.lazy_fixture('edit_url_reverse'),
+     pytest.lazy_fixture('delete_url_reverse'))
 )
-def test_redirects(client, name, args):
-    login_url = reverse('users:login')
-    url = reverse(name, args=args)
-    expected_url = f'{login_url}?next={url}'
-    response = client.get(url)
+def test_redirects(client, reverse_url, login_url_reverse):
+    expected_url = f'{login_url_reverse}?next={reverse_url}'
+    response = client.get(reverse_url)
     assertRedirects(response, expected_url)
