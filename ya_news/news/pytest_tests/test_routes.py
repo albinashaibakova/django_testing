@@ -1,15 +1,15 @@
 from http import HTTPStatus
-
 import pytest
 from pytest_django.asserts import assertRedirects
+from pytest_lazyfixture import lazy_fixture as lf
 
 
 @pytest.mark.parametrize(
     'reverse_url',
-    (pytest.lazy_fixture('home_url_reverse'),
-     pytest.lazy_fixture('login_url_reverse'),
-     pytest.lazy_fixture('logout_url_reverse'),
-     pytest.lazy_fixture('signup_url_reverse'),)
+    (lf('home_url_reverse'),
+     lf('login_url_reverse'),
+     lf('logout_url_reverse'),
+     lf('signup_url_reverse'),)
 )
 def test_pages_availability(client, reverse_url):
     url = reverse_url
@@ -24,11 +24,11 @@ def test_news_detail_page(client, detail_url_reverse):
 
 @pytest.mark.parametrize(
     'reverse_url, parametrized_client, expected_status',
-    ((pytest.lazy_fixture('edit_url_reverse'),
-      pytest.lazy_fixture('not_author_client'),
+    ((lf('edit_url_reverse'),
+      lf('not_author_client'),
       HTTPStatus.NOT_FOUND),
-     (pytest.lazy_fixture('delete_url_reverse'),
-      pytest.lazy_fixture('author_client'), HTTPStatus.OK))
+     (lf('delete_url_reverse'),
+      lf('author_client'), HTTPStatus.OK))
 )
 def test_pages_availability_for_different_users(
         parametrized_client, reverse_url,
@@ -39,8 +39,8 @@ def test_pages_availability_for_different_users(
 
 @pytest.mark.parametrize(
     'reverse_url',
-    (pytest.lazy_fixture('edit_url_reverse'),
-     pytest.lazy_fixture('delete_url_reverse'))
+    (lf('edit_url_reverse'),
+     lf('delete_url_reverse'))
 )
 def test_redirects(client, reverse_url, login_url_reverse):
     expected_url = f'{login_url_reverse}?next={reverse_url}'

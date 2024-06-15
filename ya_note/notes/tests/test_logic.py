@@ -19,7 +19,7 @@ class TestNoteCreation(BaseTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        super(TestNoteCreation, cls).setUpTestData()
+        super().setUpTestData()
         cls.form_data = {'title': cls.TITLE,
                          'text': cls.TEXT,
                          'slug': cls.SLUG}
@@ -75,7 +75,7 @@ class TestNoteEditDelete(BaseTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        super(TestNoteEditDelete, cls).setUpTestData()
+        super().setUpTestData()
         cls.form_data = {'title': cls.note.title,
                          'text': cls.NEW_TEXT,
                          'slug': cls.note.slug,
@@ -103,12 +103,16 @@ class TestNoteEditDelete(BaseTestCase):
         self.assertEqual(self.note.author, note_from_db.author)
 
     def test_author_can_delete_note(self):
+        notes_before_delete = Note.objects.count()
         response = self.auth_client.post(self.DELETE_URL_REVERSE)
         self.assertRedirects(response, self.SUCCESS_URL_REVERSE)
-        self.assertEqual(Note.objects.count(), 0)
+        self.assertEqual(Note.objects.count(),
+                         notes_before_delete - 1)
 
     def test_other_user_cant_delete_note(self):
+        notes_before_delete = Note.objects.count()
         response = self.not_author_client.post(self.DELETE_URL_REVERSE)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         assert response.status_code == HTTPStatus.NOT_FOUND
-        self.assertEqual(Note.objects.count(), 1)
+        self.assertEqual(Note.objects.count(),
+                         notes_before_delete)
